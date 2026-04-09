@@ -1,0 +1,114 @@
+type UserId = principal;
+type Timestamp = int;
+type TeamCode = text;
+type StatusSesi = 
+ variant {
+   aktif;
+   selesai;
+ };
+type SessionId = nat;
+type Sesi = 
+ record {
+   anggota: vec UserId;
+   id: SessionId;
+   indeksPuzzleAktif: nat;
+   jawabanPuzzles: vec JawabanPuzzle;
+   kodeJoin: opt text;
+   mode: ModeSesi;
+   puzzles: vec PuzzleId;
+   status: StatusSesi;
+   totalPoin: nat;
+   waktuMulai: Timestamp;
+   waktuSelesai: opt Timestamp;
+ };
+type RiwayatSesi = 
+ record {
+   akurasi: nat;
+   mode: text;
+   poin: nat;
+   sessionId: SessionId;
+   tanggal: Timestamp;
+ };
+type PuzzleId = nat;
+type Puzzle = 
+ record {
+   batasWaktu: nat;
+   id: PuzzleId;
+   jawabanBenar: nat;
+   kesulitan: Difficulty;
+   penjelasan: text;
+   pertanyaan: text;
+   pilihan: vec text;
+   poinDasar: nat;
+ };
+type ModeSesi = 
+ variant {
+   solo;
+   tim;
+ };
+type JawabanPuzzle = 
+ record {
+   jawabanAnggota: vec JawabanAnggota;
+   poinTim: nat;
+   puzzleId: PuzzleId;
+   sudahDievaluasi: bool;
+   waktuMulai: Timestamp;
+ };
+type JawabanAnggota = 
+ record {
+   benar: bool;
+   pilihanJawaban: nat;
+   poinDiperoleh: nat;
+   userId: UserId;
+   waktuSubmit: Timestamp;
+ };
+type HasilJawaban = 
+ record {
+   benar: bool;
+   penjelasan: text;
+   poinDiperoleh: nat;
+   poinTim: opt nat;
+   semuaSudahJawab: bool;
+ };
+type EntriLeaderboard = 
+ record {
+   jumlahPermainan: nat;
+   namaPemain: text;
+   totalPoin: nat;
+   userId: UserId;
+ };
+type Difficulty = 
+ variant {
+   mudah;
+   sedang;
+   sulit;
+ };
+type CityQuestion = 
+ record {
+   batasWaktu: nat;
+   gambar1: text;
+   gambar2: text;
+   id: nat;
+   namaKota: text;
+   penjelasan: text;
+   pilihan: vec text;
+   poinDasar: nat;
+ };
+service : {
+  bergabungSesiTim: (kode: TeamCode) -> (opt SessionId);
+  buatSesiSolo: () -> (SessionId);
+  buatSesiTim: () -> (SessionId, TeamCode);
+  daftarkanNama: (namaPemain: text, sessionId: SessionId) -> ();
+  getCityQuestion: (id: nat) -> (opt CityQuestion) query;
+  getLeaderboard: () -> (vec EntriLeaderboard) query;
+  getPoinKumulatif: () -> (nat) query;
+  getPoinSesi: (sessionId: SessionId) -> (nat) query;
+  getPuzzle: (id: PuzzleId) -> (opt Puzzle) query;
+  getRiwayatSesi: () -> (vec RiwayatSesi) query;
+  getSesi: (sessionId: SessionId) -> (opt Sesi) query;
+  puzzleByKesulitan: (kesulitan: Difficulty) -> (vec Puzzle) query;
+  semuaCityQuestions: () -> (vec CityQuestion) query;
+  semuaPuzzle: () -> (vec Puzzle) query;
+  submitJawaban: (sessionId: SessionId, puzzleId: PuzzleId, pilihanJawaban:
+   nat) -> (HasilJawaban);
+}

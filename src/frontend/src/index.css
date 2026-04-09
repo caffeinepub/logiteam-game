@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: "Space Grotesk";
+    --font-body: "Plus Jakarta Sans";
+    --font-mono: "JetBrains Mono";
+    --radius: 1rem;
+
+    --background: 0.14 0.025 260;
+    --foreground: 0.95 0.01 260;
+    --card: 0.18 0.03 260;
+    --card-foreground: 0.95 0.01 260;
+    --popover: 0.18 0.03 260;
+    --popover-foreground: 0.95 0.01 260;
+
+    --primary: 0.6 0.25 260;
+    --primary-foreground: 0.98 0.005 260;
+
+    --secondary: 0.22 0.04 260;
+    --secondary-foreground: 0.85 0.01 260;
+    --muted: 0.22 0.04 260;
+    --muted-foreground: 0.55 0.015 260;
+
+    --accent: 0.72 0.2 200;
+    --accent-foreground: 0.12 0.03 200;
+
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.95 0.01 25;
+
+    --border: 0.3 0.025 260;
+    --input: 0.3 0.025 260;
+    --ring: 0.6 0.25 260;
+
+    --chart-1: 0.65 0.25 200;
+    --chart-2: 0.6 0.25 260;
+    --chart-3: 0.68 0.2 55;
+    --chart-4: 0.6 0.18 200;
+    --chart-5: 0.75 0.15 230;
+
+    --sidebar: 0.2 0.025 260;
+    --sidebar-foreground: 0.95 0.01 260;
+    --sidebar-primary: 0.6 0.25 260;
+    --sidebar-primary-foreground: 0.98 0.005 260;
+    --sidebar-accent: 0.72 0.2 200;
+    --sidebar-accent-foreground: 0.12 0.03 200;
+    --sidebar-border: 0.3 0.025 260;
+    --sidebar-ring: 0.6 0.25 260;
+  }
+
+  .dark {
+    --background: 0.14 0.025 260;
+    --foreground: 0.95 0.01 260;
+    --card: 0.18 0.03 260;
+    --card-foreground: 0.95 0.01 260;
+    --popover: 0.18 0.03 260;
+    --popover-foreground: 0.95 0.01 260;
+
+    --primary: 0.6 0.25 260;
+    --primary-foreground: 0.98 0.005 260;
+
+    --secondary: 0.22 0.04 260;
+    --secondary-foreground: 0.85 0.01 260;
+    --muted: 0.22 0.04 260;
+    --muted-foreground: 0.55 0.015 260;
+
+    --accent: 0.72 0.2 200;
+    --accent-foreground: 0.12 0.03 200;
+
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.95 0.01 25;
+
+    --border: 0.3 0.025 260;
+    --input: 0.3 0.025 260;
+    --ring: 0.6 0.25 260;
+
+    --chart-1: 0.65 0.25 200;
+    --chart-2: 0.6 0.25 260;
+    --chart-3: 0.68 0.2 55;
+    --chart-4: 0.6 0.18 200;
+    --chart-5: 0.75 0.15 230;
+
+    --sidebar: 0.18 0.03 260;
+    --sidebar-foreground: 0.95 0.01 260;
+    --sidebar-primary: 0.6 0.25 260;
+    --sidebar-primary-foreground: 0.98 0.005 260;
+    --sidebar-accent: 0.72 0.2 200;
+    --sidebar-accent-foreground: 0.12 0.03 200;
+    --sidebar-border: 0.3 0.025 260;
+    --sidebar-ring: 0.6 0.25 260;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+}
+
+@layer utilities {
+  @font-face {
+    font-family: "Space Grotesk";
+    src: url("/assets/fonts/SpaceGrotesk.woff2") format("woff2");
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Plus Jakarta Sans";
+    src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "JetBrains Mono";
+    src: url("/assets/fonts/JetBrainsMono.woff2") format("woff2");
+    font-display: swap;
+  }
+
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hero-gradient {
+    background: linear-gradient(
+      135deg,
+      #0d0a2e 0%,
+      #0f1c4a 30%,
+      #130828 60%,
+      #0a0a28 100%
+    );
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.3);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 24px rgba(34, 211, 238, 0.25);
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-full transition-smooth hover:opacity-90 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-secondary text-secondary-foreground font-semibold rounded-full transition-smooth hover:opacity-90 active:scale-95;
+  }
+
+  .badge-success {
+    @apply inline-block px-3 py-1 bg-accent text-accent-foreground text-xs font-bold rounded-full;
+  }
+
+  .badge-muted {
+    @apply inline-block px-3 py-1 bg-muted text-muted-foreground text-xs font-semibold rounded-full;
+  }
+
+  .pop-in {
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .slide-in-left {
+    animation: slideInLeft 0.4s ease-out;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+}

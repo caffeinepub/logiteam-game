@@ -1,0 +1,25 @@
+{
+  "overview": "Interactive logic and teamwork game inspired by BLC PPPK 2026 training material. Players solve logic puzzles individually or in teams, earning points for correct answers with time bonuses. Features team sessions, live leaderboard, and group cohesion-themed challenges in Indonesian.",
+  "features": [
+    "Logic puzzle gameplay with timer and scoring",
+    "Solo and team/group play modes",
+    "Team session codes for collaborative play",
+    "Real-time leaderboard (top 10)",
+    "Session history and summary",
+    "BLC PPPK-themed teamwork content in Indonesian",
+    "Visual feedback with points popup"
+  ],
+  "category": "game",
+  "tags": [
+    "game",
+    "logic",
+    "teamwork",
+    "interactive",
+    "scoring",
+    "indonesia",
+    "blc",
+    "pppk",
+    "group-cohesion"
+  ],
+  "last_updated": "2026-04-08T12:42:01.651Z"
+}

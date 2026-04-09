@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { useGameContext } from "@/context/GameContext";
 import { useGameSession } from "@/hooks/useGameSession";
 import { useTimer } from "@/hooks/useTimer";
-import { type PuzzleLocal, usePuzzles } from "@/lib/actor";
+import {
+  type PuzzleLocal,
+  useInvalidateLeaderboard,
+  usePuzzles,
+} from "@/lib/actor";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   CheckCircle,
@@ -244,7 +248,7 @@ function RingkasanSesi({
                 : "Terus Berlatih!"}
           </h2>
           <p className="text-muted-foreground mt-2 text-sm">
-            Sesi permainan selesai
+            Sesi permainan selesai — skor kamu sudah dicatat di leaderboard!
           </p>
         </div>
 
@@ -341,7 +345,8 @@ export function GamePage() {
     submitJawaban,
     akhiriSesi,
   } = useGameSession();
-  const { setSkorGlobal } = useGameContext();
+  const { setSkorGlobal, daftarkanKeLeaderboard } = useGameContext();
+  const invalidateLeaderboard = useInvalidateLeaderboard();
 
   const [sudahDijawab, setSudahDijawab] = useState(false);
   const [hasilTerakhir, setHasilTerakhir] = useState<{
@@ -352,6 +357,7 @@ export function GamePage() {
   const [puzzleBenar, setPuzzleBenar] = useState(0);
   const [showScorePopup, setShowScorePopup] = useState(false);
   const [popupPoin, setPopupPoin] = useState(0);
+  const [terdaftar, setTerdaftar] = useState(false);
   const waktuMulaiRef = useRef<number>(Date.now());
 
   const handleWaktuHabis = useCallback(() => {
@@ -407,6 +413,29 @@ export function GamePage() {
     if (sesiAktif) setSkorGlobal(sesiAktif.skorTotal);
   }, [sesiAktif, setSkorGlobal]);
 
+  // Register on leaderboard when session finishes
+  useEffect(() => {
+    if (
+      sesiAktif?.status === "selesai" &&
+      sesiAktif.backendSessionId &&
+      !terdaftar
+    ) {
+      setTerdaftar(true);
+      const namaTim = sesiAktif.mode === "tim" ? sesiAktif.namaTim : undefined;
+      daftarkanKeLeaderboard(sesiAktif.backendSessionId, namaTim).then(() => {
+        invalidateLeaderboard();
+      });
+    }
+  }, [
+    sesiAktif?.status,
+    sesiAktif?.backendSessionId,
+    sesiAktif?.mode,
+    sesiAktif?.namaTim,
+    terdaftar,
+    daftarkanKeLeaderboard,
+    invalidateLeaderboard,
+  ]);
+
   const handlePilih = (kode: string) => {
     if (sudahDijawab) return;
     pilihJawaban(kode);
@@ -447,6 +476,7 @@ export function GamePage() {
     setSudahDijawab(false);
     setHasilTerakhir(null);
     setPuzzleBenar(0);
+    setTerdaftar(false);
     waktuMulaiRef.current = Date.now();
     if (puzzles) {
       const mode =

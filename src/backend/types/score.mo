@@ -4,6 +4,7 @@ module {
   public type EntriLeaderboard = {
     userId : Common.UserId;
     namaPemain : Text;
+    namaTim : ?Text;
     totalPoin : Nat;
     jumlahPermainan : Nat;
   };

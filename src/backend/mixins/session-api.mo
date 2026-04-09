@@ -39,4 +39,9 @@ mixin (
   public query func getSesi(sessionId : Common.SessionId) : async ?SessionTypes.Sesi {
     SessionLib.getSesi(sessions, sessionId);
   };
+
+  // Set team name on a session (caller must be a member)
+  public shared ({ caller }) func setNamaTim(sessionId : Common.SessionId, namaTim : Text) : async Bool {
+    SessionLib.setNamaTim(sessions, sessionId, caller, namaTim);
+  };
 };

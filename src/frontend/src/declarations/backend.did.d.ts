@@ -27,6 +27,7 @@ export interface EntriLeaderboard {
   'namaPemain' : string,
   'userId' : UserId,
   'totalPoin' : bigint,
+  'namaTim' : [] | [string],
   'jumlahPermainan' : bigint,
 }
 export interface HasilJawaban {
@@ -80,6 +81,7 @@ export interface Sesi {
   'waktuMulai' : Timestamp,
   'puzzles' : Array<PuzzleId>,
   'indeksPuzzleAktif' : bigint,
+  'namaTim' : [] | [string],
   'waktuSelesai' : [] | [Timestamp],
   'jawabanPuzzles' : Array<JawabanPuzzle>,
 }
@@ -93,7 +95,7 @@ export interface _SERVICE {
   'bergabungSesiTim' : ActorMethod<[TeamCode], [] | [SessionId]>,
   'buatSesiSolo' : ActorMethod<[], SessionId>,
   'buatSesiTim' : ActorMethod<[], [SessionId, TeamCode]>,
-  'daftarkanNama' : ActorMethod<[string, SessionId], undefined>,
+  'daftarkanNama' : ActorMethod<[string, SessionId, [] | [string]], undefined>,
   'getCityQuestion' : ActorMethod<[bigint], [] | [CityQuestion]>,
   'getLeaderboard' : ActorMethod<[], Array<EntriLeaderboard>>,
   'getPoinKumulatif' : ActorMethod<[], bigint>,
@@ -104,6 +106,7 @@ export interface _SERVICE {
   'puzzleByKesulitan' : ActorMethod<[Difficulty], Array<Puzzle>>,
   'semuaCityQuestions' : ActorMethod<[], Array<CityQuestion>>,
   'semuaPuzzle' : ActorMethod<[], Array<Puzzle>>,
+  'setNamaTim' : ActorMethod<[SessionId, string], boolean>,
   'submitJawaban' : ActorMethod<[SessionId, PuzzleId, bigint], HasilJawaban>,
 }
 export declare const idlService: IDL.ServiceClass;

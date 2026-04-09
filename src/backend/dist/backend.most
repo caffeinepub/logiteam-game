@@ -1,4 +1,4 @@
-// Version: 1.0.0
+// Version: 3.0.0
 type CityQuestion__866949110 =
   {
     batasWaktu : Nat;
@@ -17,6 +17,7 @@ type EntriLeaderboard__790840898 =
   {
     jumlahPermainan : Nat;
     namaPemain : Text;
+    namaTim : ?Text;
     totalPoin : Nat;
     userId : UserId__158757552
   };
@@ -46,11 +47,52 @@ type List__790383201<T> =
     var blocks : [var [var ?T]];
     var elementIndex : Nat__490723111
   };
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
 type ModeSesi__968094026 = {#solo; #tim};
 type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type OldEntriLeaderboard__1073325726 =
+  {
+    jumlahPermainan : Nat;
+    namaPemain : Text;
+    totalPoin : Nat;
+    userId : UserId__158757552
+  };
+type OldJawabanAnggota__836538030 =
+  {
+    benar : Bool;
+    pilihanJawaban : Nat;
+    poinDiperoleh : Nat;
+    userId : UserId__158757552;
+    waktuSubmit : Timestamp__301639476
+  };
+type OldJawabanPuzzleInternal__702375584 =
+  {
+    var jawabanAnggota : [OldJawabanAnggota__836538030];
+    var poinTim : Nat;
+    puzzleId : PuzzleId__434754034;
+    var sudahDievaluasi : Bool;
+    waktuMulai : Timestamp__301639476
+  };
+type OldSesiInternal__996281303 =
+  {
+    var anggota : [UserId__158757552];
+    id : SessionId__1052913375;
+    var indeksPuzzleAktif : Nat;
+    var jawabanPuzzles : [OldJawabanPuzzleInternal__702375584];
+    kodeJoin : ?Text;
+    mode : ModeSesi__968094026;
+    var puzzles : [PuzzleId__434754034];
+    var status : StatusSesi__22065152;
+    var totalPoin : Nat;
+    waktuMulai : Timestamp__301639476;
+    var waktuSelesai : ?Timestamp__301639476
+  };
 type PuzzleId__434754034 = Nat;
 type Puzzle__707588572 =
   {
@@ -79,6 +121,7 @@ type SesiInternal__181138103 =
     var jawabanPuzzles : [JawabanPuzzleInternal__173496236];
     kodeJoin : ?Text;
     mode : ModeSesi__968094026;
+    var namaTim : ?Text;
     var puzzles : [PuzzleId__434754034];
     var status : StatusSesi__22065152;
     var totalPoin : Nat;
@@ -90,7 +133,32 @@ type StatusSesi__22065152 = {#aktif; #selesai};
 type TeamCode__1020861737 = Text;
 type Timestamp__301639476 = Int;
 type UserId__158757552 = Principal;
-actor {
+actor ({
+  stable cityStore :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?CityQuestion__866949110]];
+      var elementIndex : Nat__490723111
+    };
+  in codeIndex : Map__605269027<TeamCode__1020861737, SessionId__1052913375>;
+  in leaderboard : List__415060402<OldEntriLeaderboard__1073325726>;
+  stable namaPemainStore :
+    {
+      var root : Node__46230540<UserId__158757552, Text>;
+      var size : Nat__490723111
+    };
+  stable var nextSessionId : Nat;
+  stable puzzles :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Puzzle__707588572]];
+      var elementIndex : Nat__490723111
+    };
+  in riwayat :
+    Map__605269027<UserId__158757552, List__415060402<RiwayatSesi__715635277>>;
+  in sessions :
+    Map__605269027<SessionId__1052913375, OldSesiInternal__996281303>
+}, {
   stable cityStore :
     {
       var blockIndex : Nat__490723111;
@@ -107,6 +175,11 @@ actor {
       var blockIndex : Nat__490723111;
       var blocks : [var [var ?EntriLeaderboard__790840898]];
       var elementIndex : Nat__490723111
+    };
+  stable namaPemainStore :
+    {
+      var root : Node__46230540<UserId__158757552, Text>;
+      var size : Nat__490723111
     };
   stable var nextSessionId : Nat;
   stable puzzles :
@@ -128,4 +201,4 @@ actor {
         Node__46230540<SessionId__1052913375, SesiInternal__181138103>;
       var size : Nat__490723111
     }
-};
+}) ;

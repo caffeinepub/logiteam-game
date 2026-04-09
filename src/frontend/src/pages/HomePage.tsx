@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useGameContext } from "@/context/GameContext";
+import { useActor } from "@/lib/actor";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Book,
@@ -81,44 +82,93 @@ const FITUR = [
   },
 ];
 
-function generateKodeTim(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
 export function HomePage() {
   const navigate = useNavigate();
   const { namaPemain, setNamaPemain } = useGameContext();
+  const { actor } = useActor();
+
   const [inputNama, setInputNama] = useState(namaPemain);
   const [jenisGame, setJenisGame] = useState<"logika" | "tebak-kota">("logika");
   const [mode, setMode] = useState<"solo" | "tim" | null>(null);
   const [timSubMode, setTimSubMode] = useState<"buat" | "gabung" | null>(null);
   const [namaTim, setNamaTim] = useState("");
   const [kodeTim, setKodeTim] = useState("");
-  const [kodeBuat] = useState(() => generateKodeTim());
+  // kodeBuat is fetched from backend when user selects "Buat Tim"
+  const [kodeBuat, setKodeBuat] = useState<string>("");
+  const [backendSessionId, setBackendSessionId] = useState<bigint | null>(null);
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
+  const [isJoiningTeam, setIsJoiningTeam] = useState(false);
 
   const isTimReady =
     mode !== "tim" ||
-    (timSubMode === "buat" && namaTim.trim()) ||
-    (timSubMode === "gabung" && kodeTim.trim().length === 6);
+    (timSubMode === "buat" && namaTim.trim() && kodeBuat) ||
+    (timSubMode === "gabung" &&
+      kodeTim.trim().length === 6 &&
+      backendSessionId !== null);
 
   const bisaMulai = inputNama.trim() && mode && isTimReady;
+
+  /** When user clicks "Buat Tim Baru" — call backend to generate team code */
+  const handleSelectBuatTim = useCallback(async () => {
+    setTimSubMode("buat");
+    setKodeBuat("");
+    setBackendSessionId(null);
+    if (!actor) return;
+    setIsCreatingTeam(true);
+    try {
+      const [sid, code] = await actor.buatSesiTim();
+      setKodeBuat(code);
+      setBackendSessionId(sid);
+    } catch {
+      // Fallback to client-side code if backend fails
+      const fallback = Math.random().toString(36).substring(2, 8).toUpperCase();
+      setKodeBuat(fallback);
+      toast.error("Gagal terhubung ke server — menggunakan kode lokal.");
+    } finally {
+      setIsCreatingTeam(false);
+    }
+  }, [actor]);
+
+  /** When user clicks "Gabung Tim" then starts — validates code via backend */
+  const handleGabungVerifikasi = useCallback(async () => {
+    if (!actor || kodeTim.length !== 6) return;
+    setIsJoiningTeam(true);
+    try {
+      const sid = await actor.bergabungSesiTim(kodeTim);
+      if (sid !== null) {
+        setBackendSessionId(sid);
+        toast.success("Berhasil bergabung ke tim!");
+      } else {
+        toast.error("Kode tim tidak ditemukan atau sudah kadaluarsa.");
+      }
+    } catch {
+      toast.error("Gagal menghubungi server. Periksa koneksimu.");
+    } finally {
+      setIsJoiningTeam(false);
+    }
+  }, [actor, kodeTim]);
 
   const handleMulai = useCallback(() => {
     const nama = inputNama.trim();
     if (!nama || !mode) return;
     setNamaPemain(nama);
-    const nt =
-      mode === "tim"
-        ? timSubMode === "buat"
-          ? namaTim.trim() || `Tim ${kodeBuat}`
-          : `Tim ${kodeTim.toUpperCase()}`
-        : "";
+
+    let nt = "";
+    if (mode === "tim") {
+      if (timSubMode === "buat") {
+        nt = namaTim.trim() || `Tim ${kodeBuat}`;
+      } else {
+        nt = `Tim ${kodeTim.toUpperCase()}`;
+      }
+    }
+
     const tujuan = jenisGame === "tebak-kota" ? "/tebak-kota" : "/game";
     navigate({
       to: tujuan,
       search: {
         mode,
         namaTim: nt || undefined,
+        sessionId: backendSessionId?.toString() ?? undefined,
       },
     });
   }, [
@@ -129,11 +179,13 @@ export function HomePage() {
     namaTim,
     kodeTim,
     kodeBuat,
+    backendSessionId,
     setNamaPemain,
     navigate,
   ]);
 
   const handleCopyKode = () => {
+    if (!kodeBuat) return;
     navigator.clipboard.writeText(kodeBuat);
     toast.success("Kode tim disalin!");
   };
@@ -294,6 +346,8 @@ export function HomePage() {
                     onClick={() => {
                       setMode(m);
                       setTimSubMode(null);
+                      setKodeBuat("");
+                      setBackendSessionId(null);
                     }}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
                       mode === m
@@ -334,7 +388,8 @@ export function HomePage() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setTimSubMode("buat")}
+                    onClick={handleSelectBuatTim}
+                    disabled={isCreatingTeam}
                     className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 ${
                       timSubMode === "buat"
                         ? "border-accent bg-accent/10 text-accent"
@@ -343,11 +398,14 @@ export function HomePage() {
                     data-ocid="btn-buat-tim"
                   >
                     <Plus className="w-4 h-4" />
-                    Buat Tim Baru
+                    {isCreatingTeam ? "Membuat..." : "Buat Tim Baru"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTimSubMode("gabung")}
+                    onClick={() => {
+                      setTimSubMode("gabung");
+                      setBackendSessionId(null);
+                    }}
                     className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 ${
                       timSubMode === "gabung"
                         ? "border-primary bg-primary/10 text-primary"
@@ -388,13 +446,14 @@ export function HomePage() {
                           Kode Tim (bagikan ke anggota)
                         </div>
                         <div className="text-lg font-black font-mono text-accent tracking-widest">
-                          {kodeBuat}
+                          {isCreatingTeam ? "..." : kodeBuat || "------"}
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={handleCopyKode}
-                        className="p-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors duration-200"
+                        disabled={!kodeBuat}
+                        className="p-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors duration-200 disabled:opacity-40"
                         aria-label="Salin kode tim"
                         data-ocid="btn-salin-kode"
                       >
@@ -408,7 +467,7 @@ export function HomePage() {
                   <motion.div
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-1.5"
+                    className="space-y-2"
                   >
                     <label
                       className="text-xs font-semibold text-muted-foreground"
@@ -416,20 +475,39 @@ export function HomePage() {
                     >
                       Kode Tim (6 karakter)
                     </label>
-                    <Input
-                      id="kode-tim"
-                      placeholder="Contoh: A3X9KZ"
-                      value={kodeTim}
-                      onChange={(e) =>
-                        setKodeTim(e.target.value.toUpperCase().slice(0, 6))
-                      }
-                      className="bg-secondary/50 border-border focus:border-primary font-mono tracking-widest uppercase text-center text-lg"
-                      maxLength={6}
-                      data-ocid="input-kode-tim"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="kode-tim"
+                        placeholder="Contoh: A3X9KZ"
+                        value={kodeTim}
+                        onChange={(e) => {
+                          setKodeTim(e.target.value.toUpperCase().slice(0, 6));
+                          setBackendSessionId(null);
+                        }}
+                        className="bg-secondary/50 border-border focus:border-primary font-mono tracking-widest uppercase text-center text-lg flex-1"
+                        maxLength={6}
+                        data-ocid="input-kode-tim"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleGabungVerifikasi}
+                        disabled={kodeTim.length !== 6 || isJoiningTeam}
+                        className="border-primary/40 text-primary hover:bg-primary/10 shrink-0"
+                        data-ocid="btn-verifikasi-kode"
+                      >
+                        {isJoiningTeam ? "..." : "Cek"}
+                      </Button>
+                    </div>
                     {kodeTim.length > 0 && kodeTim.length < 6 && (
                       <p className="text-xs text-chart-3">
                         Kode harus 6 karakter
+                      </p>
+                    )}
+                    {backendSessionId !== null && (
+                      <p className="text-xs text-accent font-semibold">
+                        ✅ Kode valid — siap bergabung!
                       </p>
                     )}
                   </motion.div>

@@ -25,6 +25,7 @@ export const EntriLeaderboard = IDL.Record({
   'namaPemain' : IDL.Text,
   'userId' : UserId,
   'totalPoin' : IDL.Nat,
+  'namaTim' : IDL.Opt(IDL.Text),
   'jumlahPermainan' : IDL.Nat,
 });
 export const PuzzleId = IDL.Nat;
@@ -80,6 +81,7 @@ export const Sesi = IDL.Record({
   'waktuMulai' : Timestamp,
   'puzzles' : IDL.Vec(PuzzleId),
   'indeksPuzzleAktif' : IDL.Nat,
+  'namaTim' : IDL.Opt(IDL.Text),
   'waktuSelesai' : IDL.Opt(Timestamp),
   'jawabanPuzzles' : IDL.Vec(JawabanPuzzle),
 });
@@ -95,7 +97,7 @@ export const idlService = IDL.Service({
   'bergabungSesiTim' : IDL.Func([TeamCode], [IDL.Opt(SessionId)], []),
   'buatSesiSolo' : IDL.Func([], [SessionId], []),
   'buatSesiTim' : IDL.Func([], [SessionId, TeamCode], []),
-  'daftarkanNama' : IDL.Func([IDL.Text, SessionId], [], []),
+  'daftarkanNama' : IDL.Func([IDL.Text, SessionId, IDL.Opt(IDL.Text)], [], []),
   'getCityQuestion' : IDL.Func([IDL.Nat], [IDL.Opt(CityQuestion)], ['query']),
   'getLeaderboard' : IDL.Func([], [IDL.Vec(EntriLeaderboard)], ['query']),
   'getPoinKumulatif' : IDL.Func([], [IDL.Nat], ['query']),
@@ -106,6 +108,7 @@ export const idlService = IDL.Service({
   'puzzleByKesulitan' : IDL.Func([Difficulty], [IDL.Vec(Puzzle)], ['query']),
   'semuaCityQuestions' : IDL.Func([], [IDL.Vec(CityQuestion)], ['query']),
   'semuaPuzzle' : IDL.Func([], [IDL.Vec(Puzzle)], ['query']),
+  'setNamaTim' : IDL.Func([SessionId, IDL.Text], [IDL.Bool], []),
   'submitJawaban' : IDL.Func(
       [SessionId, PuzzleId, IDL.Nat],
       [HasilJawaban],
@@ -133,6 +136,7 @@ export const idlFactory = ({ IDL }) => {
     'namaPemain' : IDL.Text,
     'userId' : UserId,
     'totalPoin' : IDL.Nat,
+    'namaTim' : IDL.Opt(IDL.Text),
     'jumlahPermainan' : IDL.Nat,
   });
   const PuzzleId = IDL.Nat;
@@ -185,6 +189,7 @@ export const idlFactory = ({ IDL }) => {
     'waktuMulai' : Timestamp,
     'puzzles' : IDL.Vec(PuzzleId),
     'indeksPuzzleAktif' : IDL.Nat,
+    'namaTim' : IDL.Opt(IDL.Text),
     'waktuSelesai' : IDL.Opt(Timestamp),
     'jawabanPuzzles' : IDL.Vec(JawabanPuzzle),
   });
@@ -200,7 +205,11 @@ export const idlFactory = ({ IDL }) => {
     'bergabungSesiTim' : IDL.Func([TeamCode], [IDL.Opt(SessionId)], []),
     'buatSesiSolo' : IDL.Func([], [SessionId], []),
     'buatSesiTim' : IDL.Func([], [SessionId, TeamCode], []),
-    'daftarkanNama' : IDL.Func([IDL.Text, SessionId], [], []),
+    'daftarkanNama' : IDL.Func(
+        [IDL.Text, SessionId, IDL.Opt(IDL.Text)],
+        [],
+        [],
+      ),
     'getCityQuestion' : IDL.Func([IDL.Nat], [IDL.Opt(CityQuestion)], ['query']),
     'getLeaderboard' : IDL.Func([], [IDL.Vec(EntriLeaderboard)], ['query']),
     'getPoinKumulatif' : IDL.Func([], [IDL.Nat], ['query']),
@@ -211,6 +220,7 @@ export const idlFactory = ({ IDL }) => {
     'puzzleByKesulitan' : IDL.Func([Difficulty], [IDL.Vec(Puzzle)], ['query']),
     'semuaCityQuestions' : IDL.Func([], [IDL.Vec(CityQuestion)], ['query']),
     'semuaPuzzle' : IDL.Func([], [IDL.Vec(Puzzle)], ['query']),
+    'setNamaTim' : IDL.Func([SessionId, IDL.Text], [IDL.Bool], []),
     'submitJawaban' : IDL.Func(
         [SessionId, PuzzleId, IDL.Nat],
         [HasilJawaban],

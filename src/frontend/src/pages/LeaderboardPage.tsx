@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGameContext } from "@/context/GameContext";
-import { useLeaderboard } from "@/lib/actor";
+import { type LeaderboardEntryLocal, useLeaderboard } from "@/lib/actor";
 import { useNavigate } from "@tanstack/react-router";
 import { Medal, RefreshCw, Star, Trophy } from "lucide-react";
 import { motion } from "motion/react";
@@ -40,13 +40,7 @@ function PodiumCard({
   index,
   isCurrentPlayer,
 }: {
-  entry: {
-    peringkat: number;
-    namaTim: string;
-    skor: number;
-    emot: string;
-    puzzleSelesai: number;
-  };
+  entry: LeaderboardEntryLocal;
   index: number;
   isCurrentPlayer: boolean;
 }) {
@@ -74,11 +68,11 @@ function PodiumCard({
       {/* Emoji mascot */}
       <span className="text-2xl flex-shrink-0">{entry.emot}</span>
 
-      {/* Team info */}
+      {/* Player / team info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="font-bold text-foreground truncate">
-            {entry.namaTim}
+            {entry.namaPemain || entry.namaTampil}
           </span>
           {isCurrentPlayer && (
             <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-semibold flex-shrink-0">
@@ -86,8 +80,13 @@ function PodiumCard({
             </span>
           )}
         </div>
+        {entry.namaTim && (
+          <div className="text-xs text-accent font-semibold mt-0.5 truncate">
+            🏆 {entry.namaTim}
+          </div>
+        )}
         <div className="text-xs text-muted-foreground mt-0.5">
-          {entry.puzzleSelesai} puzzle selesai
+          {entry.puzzleSelesai} permainan selesai
         </div>
       </div>
 
@@ -100,7 +99,7 @@ function PodiumCard({
         </div>
         <div className="flex items-center justify-end gap-0.5 mt-0.5">
           {Array.from({
-            length: Math.min(3, Math.ceil(entry.puzzleSelesai / 3)),
+            length: Math.min(3, Math.ceil(entry.puzzleSelesai / 3) || 1),
           }).map((_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length decorative stars
             <Star key={i} className="w-2.5 h-2.5 fill-chart-3 text-chart-3" />
@@ -195,8 +194,13 @@ export function LeaderboardPage() {
                 </div>
                 <div className="bg-muted/60 rounded-t-xl px-2 py-4 border border-muted-foreground/20">
                   <div className="text-sm font-bold text-foreground truncate">
-                    {entries[1].namaTim}
+                    {entries[1].namaPemain || entries[1].namaTampil}
                   </div>
+                  {entries[1].namaTim && (
+                    <div className="text-xs text-accent font-semibold truncate">
+                      🏆 {entries[1].namaTim}
+                    </div>
+                  )}
                   <div className="text-lg font-black font-mono text-foreground">
                     {entries[1].skor.toLocaleString()}
                   </div>
@@ -215,8 +219,13 @@ export function LeaderboardPage() {
                 </div>
                 <div className="bg-chart-3/15 rounded-t-xl px-2 py-5 border border-chart-3/40">
                   <div className="text-sm font-bold text-foreground truncate">
-                    {entries[0].namaTim}
+                    {entries[0].namaPemain || entries[0].namaTampil}
                   </div>
+                  {entries[0].namaTim && (
+                    <div className="text-xs text-accent font-semibold truncate">
+                      🏆 {entries[0].namaTim}
+                    </div>
+                  )}
                   <div className="text-xl font-black font-mono text-chart-3">
                     {entries[0].skor.toLocaleString()}
                   </div>
@@ -235,8 +244,13 @@ export function LeaderboardPage() {
                 </div>
                 <div className="bg-accent/10 rounded-t-xl px-2 py-3 border border-accent/20">
                   <div className="text-sm font-bold text-foreground truncate">
-                    {entries[2].namaTim}
+                    {entries[2].namaPemain || entries[2].namaTampil}
                   </div>
+                  {entries[2].namaTim && (
+                    <div className="text-xs text-accent font-semibold truncate">
+                      🏆 {entries[2].namaTim}
+                    </div>
+                  )}
                   <div className="text-lg font-black font-mono text-accent">
                     {entries[2].skor.toLocaleString()}
                   </div>
@@ -255,7 +269,7 @@ export function LeaderboardPage() {
               Semua Peringkat
             </h2>
             <span className="text-xs text-muted-foreground">
-              {entries?.length ?? 0} tim terdaftar
+              {entries?.length ?? 0} pemain terdaftar
             </span>
           </div>
 
@@ -266,12 +280,12 @@ export function LeaderboardPage() {
               ))
             : (entries ?? []).map((entry, i) => (
                 <PodiumCard
-                  key={entry.peringkat}
+                  key={`${entry.peringkat}-${entry.namaTampil}`}
                   entry={entry}
                   index={i}
                   isCurrentPlayer={
                     !!namaPemain &&
-                    entry.namaTim
+                    entry.namaTampil
                       .toLowerCase()
                       .includes(namaPemain.toLowerCase())
                   }
@@ -307,18 +321,18 @@ export function LeaderboardPage() {
         <div className="max-w-2xl mx-auto grid sm:grid-cols-3 gap-4 text-center">
           {[
             {
-              label: "Tim Terdaftar",
-              nilai: entries?.length.toString() ?? "5",
+              label: "Pemain Terdaftar",
+              nilai: entries?.length.toString() ?? "0",
               warna: "text-primary",
             },
             {
               label: "Skor Tertinggi",
-              nilai: entries?.[0]?.skor.toLocaleString() ?? "2.450",
+              nilai: entries?.[0]?.skor.toLocaleString() ?? "0",
               warna: "text-chart-3",
             },
             {
-              label: "Puzzle Selesai",
-              nilai: entries?.[0]?.puzzleSelesai.toString() ?? "10",
+              label: "Permainan Selesai",
+              nilai: entries?.[0]?.puzzleSelesai.toString() ?? "0",
               warna: "text-accent",
             },
           ].map(({ label, nilai, warna }) => (

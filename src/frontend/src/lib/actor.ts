@@ -1,10 +1,20 @@
-import { useActor } from "@caffeineai/core-infrastructure";
-import { useQuery } from "@tanstack/react-query";
+import { createActor } from "@/backend";
+import type { backendInterface } from "@/backend";
+import { useActor as _useActor } from "@caffeineai/core-infrastructure";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-// Re-export useActor for convenience
-export { useActor };
+// Typed actor hook — returns the Backend instance from backend.ts
+export function useActor(): {
+  actor: backendInterface | null;
+  isFetching: boolean;
+} {
+  return _useActor(createActor) as {
+    actor: backendInterface | null;
+    isFetching: boolean;
+  };
+}
 
-// Local puzzle data since backend interface is not yet populated
+// Local puzzle data since backend interface is not yet populated with puzzle data
 export interface PuzzleLocal {
   id: string;
   pertanyaan: string;
@@ -194,16 +204,18 @@ export function usePuzzles() {
   return useQuery({
     queryKey: ["puzzles"],
     queryFn: async (): Promise<PuzzleLocal[]> => {
-      // Backend not yet populated — use local data
       return PUZZLES_LOCAL;
     },
     staleTime: 1000 * 60 * 10,
   });
 }
 
+/** Normalized leaderboard entry for display */
 export interface LeaderboardEntryLocal {
   peringkat: number;
-  namaTim: string;
+  namaTampil: string;
+  namaPemain: string;
+  namaTim?: string;
   skor: number;
   emot: string;
   puzzleSelesai: number;
@@ -362,48 +374,49 @@ export function useCityQuestions() {
   });
 }
 
+// Emoji avatars for leaderboard entries
+const EMOT_LIST = ["🦅", "🦁", "🐯", "🦊", "🐺", "🦄", "🐻", "🦚", "🐉", "⚡"];
+
+function getEmot(index: number): string {
+  return EMOT_LIST[index % EMOT_LIST.length];
+}
+
 export function useLeaderboard() {
-  return useQuery({
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<LeaderboardEntryLocal[]>({
     queryKey: ["leaderboard"],
     queryFn: async (): Promise<LeaderboardEntryLocal[]> => {
-      return [
-        {
-          peringkat: 1,
-          namaTim: "Tim Elang Biru",
-          skor: 2450,
-          emot: "🦅",
-          puzzleSelesai: 10,
-        },
-        {
-          peringkat: 2,
-          namaTim: "Tim Garuda Emas",
-          skor: 2200,
-          emot: "🦅",
-          puzzleSelesai: 10,
-        },
-        {
-          peringkat: 3,
-          namaTim: "Tim Beruang Madu",
-          skor: 1950,
-          emot: "🐻",
-          puzzleSelesai: 9,
-        },
-        {
-          peringkat: 4,
-          namaTim: "Tim Singa Perkasa",
-          skor: 1800,
-          emot: "🦁",
-          puzzleSelesai: 9,
-        },
-        {
-          peringkat: 5,
-          namaTim: "Tim Merak Indah",
-          skor: 1550,
-          emot: "🦚",
-          puzzleSelesai: 8,
-        },
-      ];
+      if (!actor) return [];
+      try {
+        const entries = await actor.getLeaderboard();
+        return entries.map((e, idx) => {
+          const namaTim = e.namaTim ?? undefined;
+          // Display: team name if present, otherwise player name
+          const namaTampil = namaTim
+            ? `${e.namaPemain} (${namaTim})`
+            : e.namaPemain || `Pemain ${idx + 1}`;
+          return {
+            peringkat: idx + 1,
+            namaTampil,
+            namaPemain: e.namaPemain,
+            namaTim,
+            skor: Number(e.totalPoin),
+            emot: getEmot(idx),
+            puzzleSelesai: Number(e.jumlahPermainan),
+          };
+        });
+      } catch {
+        return [];
+      }
     },
-    staleTime: 1000 * 60 * 2,
+    staleTime: 30_000,
+    enabled: !!actor && !actorFetching,
   });
+}
+
+/** Invalidate leaderboard cache — call after registering a player */
+export function useInvalidateLeaderboard() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
 }

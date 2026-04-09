@@ -5,7 +5,8 @@ export const mockBackend: backendInterface = {
   bergabungSesiTim: async (_kode) => BigInt(1),
   buatSesiSolo: async () => BigInt(1),
   buatSesiTim: async () => [BigInt(1), "TEAM-ABC"] as [bigint, string],
-  daftarkanNama: async (_nama, _sessionId) => undefined,
+  daftarkanNama: async (_nama, _sessionId, _namaTim) => undefined,
+  setNamaTim: async (_sessionId, _namaTim) => true,
   getLeaderboard: async () => [
     {
       namaPemain: "Budi Santoso",

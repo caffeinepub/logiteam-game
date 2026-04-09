@@ -44,6 +44,7 @@ module {
     waktuMulai : Common.Timestamp;
     var waktuSelesai : ?Common.Timestamp;
     var indeksPuzzleAktif : Nat;
+    var namaTim : ?Text; // optional team name for team mode
   };
 
   // Public session for API boundary
@@ -59,5 +60,6 @@ module {
     waktuMulai : Common.Timestamp;
     waktuSelesai : ?Common.Timestamp;
     indeksPuzzleAktif : Nat;
+    namaTim : ?Text;
   };
 };

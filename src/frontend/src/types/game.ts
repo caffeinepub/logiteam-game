@@ -25,6 +25,8 @@ export interface AnggotaTim {
 
 export interface SessionState {
   id: string;
+  backendSessionId?: bigint;
+  teamCode?: string;
   mode: GameMode;
   namaTim?: string;
   pemain: AnggotaTim[];
@@ -39,7 +41,10 @@ export interface SessionState {
 
 export interface LeaderboardEntry {
   peringkat: number;
-  namaTim: string;
+  /** Nama tampilan: nama tim jika ada, nama pemain jika solo */
+  namaTampil: string;
+  namaPemain: string;
+  namaTim?: string;
   skor: number;
   emot: string;
   puzzleSelesai: number;
@@ -64,6 +69,10 @@ export interface GameContextValue {
   setSesiAktif: (sesi: SessionState | null) => void;
   skorGlobal: number;
   setSkorGlobal: (skor: number) => void;
+  daftarkanKeLeaderboard: (
+    sessionId: bigint,
+    namaTim?: string,
+  ) => Promise<void>;
 }
 
 export interface HasilJawaban {

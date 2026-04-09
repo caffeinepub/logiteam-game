@@ -15,6 +15,7 @@ type Sesi =
    jawabanPuzzles: vec JawabanPuzzle;
    kodeJoin: opt text;
    mode: ModeSesi;
+   namaTim: opt text;
    puzzles: vec PuzzleId;
    status: StatusSesi;
    totalPoin: nat;
@@ -74,6 +75,7 @@ type EntriLeaderboard =
  record {
    jumlahPermainan: nat;
    namaPemain: text;
+   namaTim: opt text;
    totalPoin: nat;
    userId: UserId;
  };
@@ -98,7 +100,8 @@ service : {
   bergabungSesiTim: (kode: TeamCode) -> (opt SessionId);
   buatSesiSolo: () -> (SessionId);
   buatSesiTim: () -> (SessionId, TeamCode);
-  daftarkanNama: (namaPemain: text, sessionId: SessionId) -> ();
+  daftarkanNama: (namaPemain: text, sessionId: SessionId, namaTim:
+   opt text) -> ();
   getCityQuestion: (id: nat) -> (opt CityQuestion) query;
   getLeaderboard: () -> (vec EntriLeaderboard) query;
   getPoinKumulatif: () -> (nat) query;
@@ -109,6 +112,7 @@ service : {
   puzzleByKesulitan: (kesulitan: Difficulty) -> (vec Puzzle) query;
   semuaCityQuestions: () -> (vec CityQuestion) query;
   semuaPuzzle: () -> (vec Puzzle) query;
+  setNamaTim: (sessionId: SessionId, namaTim: text) -> (bool);
   submitJawaban: (sessionId: SessionId, puzzleId: PuzzleId, pilihanJawaban:
    nat) -> (HasilJawaban);
 }

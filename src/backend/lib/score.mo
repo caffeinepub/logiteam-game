@@ -181,6 +181,7 @@ module {
     leaderboard : List.List<ScoreTypes.EntriLeaderboard>,
     userId : Common.UserId,
     namaPemain : Text,
+    namaTim : ?Text,
     tambahPoin : Nat,
   ) {
     // Find existing entry
@@ -191,6 +192,7 @@ module {
         leaderboard.put(i, {
           userId = existing.userId;
           namaPemain;
+          namaTim;
           totalPoin = existing.totalPoin + tambahPoin;
           jumlahPermainan = existing.jumlahPermainan + 1;
         });
@@ -199,6 +201,7 @@ module {
         leaderboard.add({
           userId;
           namaPemain;
+          namaTim;
           totalPoin = tambahPoin;
           jumlahPermainan = 1;
         });

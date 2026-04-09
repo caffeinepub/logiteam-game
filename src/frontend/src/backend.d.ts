@@ -19,6 +19,7 @@ export interface EntriLeaderboard {
     namaPemain: string;
     userId: UserId;
     totalPoin: bigint;
+    namaTim?: string;
     jumlahPermainan: bigint;
 }
 export type SessionId = bigint;
@@ -69,6 +70,7 @@ export interface Sesi {
     waktuMulai: Timestamp;
     puzzles: Array<PuzzleId>;
     indeksPuzzleAktif: bigint;
+    namaTim?: string;
     waktuSelesai?: Timestamp;
     jawabanPuzzles: Array<JawabanPuzzle>;
 }
@@ -96,7 +98,7 @@ export interface backendInterface {
     bergabungSesiTim(kode: TeamCode): Promise<SessionId | null>;
     buatSesiSolo(): Promise<SessionId>;
     buatSesiTim(): Promise<[SessionId, TeamCode]>;
-    daftarkanNama(namaPemain: string, sessionId: SessionId): Promise<void>;
+    daftarkanNama(namaPemain: string, sessionId: SessionId, namaTim: string | null): Promise<void>;
     getCityQuestion(id: bigint): Promise<CityQuestion | null>;
     getLeaderboard(): Promise<Array<EntriLeaderboard>>;
     getPoinKumulatif(): Promise<bigint>;
@@ -107,5 +109,6 @@ export interface backendInterface {
     puzzleByKesulitan(kesulitan: Difficulty): Promise<Array<Puzzle>>;
     semuaCityQuestions(): Promise<Array<CityQuestion>>;
     semuaPuzzle(): Promise<Array<Puzzle>>;
+    setNamaTim(sessionId: SessionId, namaTim: string): Promise<boolean>;
     submitJawaban(sessionId: SessionId, puzzleId: PuzzleId, pilihanJawaban: bigint): Promise<HasilJawaban>;
 }

@@ -13,6 +13,7 @@ mixin (
   puzzles : List.List<PuzzleTypes.Puzzle>,
   riwayat : Map.Map<Common.UserId, List.List<ScoreTypes.RiwayatSesi>>,
   leaderboard : List.List<ScoreTypes.EntriLeaderboard>,
+  namaPemainStore : Map.Map<Common.UserId, Text>,
 ) {
 
   // Submit answer for a puzzle in a session
@@ -22,7 +23,7 @@ mixin (
     pilihanJawaban : Nat,
   ) : async ScoreTypes.HasilJawaban {
     let hasil = ScoreLib.submitJawaban(sessions, puzzles, sessionId, puzzleId, caller, pilihanJawaban, Time.now());
-    // If session is now finished, save to history
+    // If session is now finished, save to history and auto-register on leaderboard
     switch (sessions.get(sessionId)) {
       case null {};
       case (?sesi) {
@@ -51,6 +52,13 @@ mixin (
             akurasi;
           };
           ScoreLib.simpanRiwayatSesi(riwayat, caller, entry);
+          // Auto-register on leaderboard
+          let namaPemain = switch (namaPemainStore.get(caller)) {
+            case (?nama) { nama };
+            case null { caller.toText() };
+          };
+          let namaTim = sesi.namaTim;
+          ScoreLib.updateLeaderboard(leaderboard, caller, namaPemain, namaTim, playerPoin);
         };
       };
     };
@@ -78,8 +86,31 @@ mixin (
   };
 
   // Register/update player name on leaderboard after finishing a session
-  public shared ({ caller }) func daftarkanNama(namaPemain : Text, sessionId : Common.SessionId) : async () {
+  // namaTim is optional — used for team sessions to display team name
+  public shared ({ caller }) func daftarkanNama(namaPemain : Text, sessionId : Common.SessionId, namaTim : ?Text) : async () {
+    // Store player display name for future auto-registrations
+    namaPemainStore.add(caller, namaPemain);
     let poin = ScoreLib.getPoinSesi(sessions, sessionId, caller);
-    ScoreLib.updateLeaderboard(leaderboard, caller, namaPemain, poin);
+    // Resolve team name: prefer explicit namaTim arg, fall back to session's namaTim
+    let resolvedNamaTim = switch (namaTim) {
+      case (?t) { ?t };
+      case null {
+        switch (sessions.get(sessionId)) {
+          case (?sesi) { sesi.namaTim };
+          case null { null };
+        };
+      };
+    };
+    // Also persist namaTim on session if provided
+    switch (namaTim) {
+      case (?t) {
+        switch (sessions.get(sessionId)) {
+          case (?sesi) { sesi.namaTim := ?t };
+          case null {};
+        };
+      };
+      case null {};
+    };
+    ScoreLib.updateLeaderboard(leaderboard, caller, namaPemain, resolvedNamaTim, poin);
   };
 };

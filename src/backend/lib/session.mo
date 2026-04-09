@@ -47,6 +47,7 @@ module {
       waktuMulai = sesi.waktuMulai;
       waktuSelesai = sesi.waktuSelesai;
       indeksPuzzleAktif = sesi.indeksPuzzleAktif;
+      namaTim = sesi.namaTim;
     };
   };
 
@@ -85,6 +86,7 @@ module {
       waktuMulai = now;
       var waktuSelesai = null;
       var indeksPuzzleAktif = 0;
+      var namaTim = null;
     };
     sessions.add(nextId, sesi);
     nextId;
@@ -111,6 +113,7 @@ module {
       waktuMulai = now;
       var waktuSelesai = null;
       var indeksPuzzleAktif = 0;
+      var namaTim = null;
     };
     sessions.add(nextId, sesi);
     codeIndex.add(kode, nextId);
@@ -148,6 +151,28 @@ module {
     switch (sessions.get(id)) {
       case null { null };
       case (?sesi) { ?toPublic(sesi) };
+    };
+  };
+
+  // Set team name on a team session (only if caller is a member)
+  public func setNamaTim(
+    sessions : Map.Map<Common.SessionId, SessionTypes.SesiInternal>,
+    sessionId : Common.SessionId,
+    userId : Common.UserId,
+    namaTim : Text,
+  ) : Bool {
+    switch (sessions.get(sessionId)) {
+      case null { false };
+      case (?sesi) {
+        let isMember = sesi.anggota.find(func(u : Common.UserId) : Bool { Principal.equal(u, userId) });
+        switch (isMember) {
+          case null { false };
+          case (?_) {
+            sesi.namaTim := ?namaTim;
+            true;
+          };
+        };
+      };
     };
   };
 };

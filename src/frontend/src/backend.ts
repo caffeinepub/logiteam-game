@@ -101,6 +101,7 @@ export interface EntriLeaderboard {
     namaPemain: string;
     userId: UserId;
     totalPoin: bigint;
+    namaTim?: string;
     jumlahPermainan: bigint;
 }
 export type SessionId = bigint;
@@ -151,6 +152,7 @@ export interface Sesi {
     waktuMulai: Timestamp;
     puzzles: Array<PuzzleId>;
     indeksPuzzleAktif: bigint;
+    namaTim?: string;
     waktuSelesai?: Timestamp;
     jawabanPuzzles: Array<JawabanPuzzle>;
 }
@@ -178,7 +180,7 @@ export interface backendInterface {
     bergabungSesiTim(kode: TeamCode): Promise<SessionId | null>;
     buatSesiSolo(): Promise<SessionId>;
     buatSesiTim(): Promise<[SessionId, TeamCode]>;
-    daftarkanNama(namaPemain: string, sessionId: SessionId): Promise<void>;
+    daftarkanNama(namaPemain: string, sessionId: SessionId, namaTim: string | null): Promise<void>;
     getCityQuestion(id: bigint): Promise<CityQuestion | null>;
     getLeaderboard(): Promise<Array<EntriLeaderboard>>;
     getPoinKumulatif(): Promise<bigint>;
@@ -189,9 +191,10 @@ export interface backendInterface {
     puzzleByKesulitan(kesulitan: Difficulty): Promise<Array<Puzzle>>;
     semuaCityQuestions(): Promise<Array<CityQuestion>>;
     semuaPuzzle(): Promise<Array<Puzzle>>;
+    setNamaTim(sessionId: SessionId, namaTim: string): Promise<boolean>;
     submitJawaban(sessionId: SessionId, puzzleId: PuzzleId, pilihanJawaban: bigint): Promise<HasilJawaban>;
 }
-import type { CityQuestion as _CityQuestion, Difficulty as _Difficulty, HasilJawaban as _HasilJawaban, JawabanPuzzle as _JawabanPuzzle, ModeSesi as _ModeSesi, Puzzle as _Puzzle, PuzzleId as _PuzzleId, Sesi as _Sesi, SessionId as _SessionId, StatusSesi as _StatusSesi, Timestamp as _Timestamp, UserId as _UserId } from "./declarations/backend.did.d.ts";
+import type { CityQuestion as _CityQuestion, Difficulty as _Difficulty, EntriLeaderboard as _EntriLeaderboard, HasilJawaban as _HasilJawaban, JawabanPuzzle as _JawabanPuzzle, ModeSesi as _ModeSesi, Puzzle as _Puzzle, PuzzleId as _PuzzleId, Sesi as _Sesi, SessionId as _SessionId, StatusSesi as _StatusSesi, Timestamp as _Timestamp, UserId as _UserId } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async bergabungSesiTim(arg0: TeamCode): Promise<SessionId | null> {
@@ -242,17 +245,17 @@ export class Backend implements backendInterface {
             ];
         }
     }
-    async daftarkanNama(arg0: string, arg1: SessionId): Promise<void> {
+    async daftarkanNama(arg0: string, arg1: SessionId, arg2: string | null): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.daftarkanNama(arg0, arg1);
+                const result = await this.actor.daftarkanNama(arg0, arg1, to_candid_opt_n2(this._uploadFile, this._downloadFile, arg2));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.daftarkanNama(arg0, arg1);
+            const result = await this.actor.daftarkanNama(arg0, arg1, to_candid_opt_n2(this._uploadFile, this._downloadFile, arg2));
             return result;
         }
     }
@@ -260,28 +263,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getCityQuestion(arg0);
-                return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCityQuestion(arg0);
-            return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async getLeaderboard(): Promise<Array<EntriLeaderboard>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getLeaderboard();
-                return result;
+                return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getLeaderboard();
-            return result;
+            return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPoinKumulatif(): Promise<bigint> {
@@ -316,14 +319,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getPuzzle(arg0);
-                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPuzzle(arg0);
-            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async getRiwayatSesi(): Promise<Array<RiwayatSesi>> {
@@ -344,28 +347,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getSesi(arg0);
-                return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getSesi(arg0);
-            return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
         }
     }
     async puzzleByKesulitan(arg0: Difficulty): Promise<Array<Puzzle>> {
         if (this.processError) {
             try {
-                const result = await this.actor.puzzleByKesulitan(to_candid_Difficulty_n17(this._uploadFile, this._downloadFile, arg0));
-                return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.puzzleByKesulitan(to_candid_Difficulty_n21(this._uploadFile, this._downloadFile, arg0));
+                return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.puzzleByKesulitan(to_candid_Difficulty_n17(this._uploadFile, this._downloadFile, arg0));
-            return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.puzzleByKesulitan(to_candid_Difficulty_n21(this._uploadFile, this._downloadFile, arg0));
+            return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
         }
     }
     async semuaCityQuestions(): Promise<Array<CityQuestion>> {
@@ -386,131 +389,88 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.semuaPuzzle();
-                return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.semuaPuzzle();
-            return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async setNamaTim(arg0: SessionId, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setNamaTim(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setNamaTim(arg0, arg1);
+            return result;
         }
     }
     async submitJawaban(arg0: SessionId, arg1: PuzzleId, arg2: bigint): Promise<HasilJawaban> {
         if (this.processError) {
             try {
                 const result = await this.actor.submitJawaban(arg0, arg1, arg2);
-                return from_candid_HasilJawaban_n20(this._uploadFile, this._downloadFile, result);
+                return from_candid_HasilJawaban_n24(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.submitJawaban(arg0, arg1, arg2);
-            return from_candid_HasilJawaban_n20(this._uploadFile, this._downloadFile, result);
+            return from_candid_HasilJawaban_n24(this._uploadFile, this._downloadFile, result);
         }
     }
 }
-function from_candid_Difficulty_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Difficulty): Difficulty {
-    return from_candid_variant_n7(_uploadFile, _downloadFile, value);
+function from_candid_Difficulty_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Difficulty): Difficulty {
+    return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
-function from_candid_HasilJawaban_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _HasilJawaban): HasilJawaban {
-    return from_candid_record_n21(_uploadFile, _downloadFile, value);
+function from_candid_EntriLeaderboard_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EntriLeaderboard): EntriLeaderboard {
+    return from_candid_record_n6(_uploadFile, _downloadFile, value);
 }
-function from_candid_ModeSesi_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ModeSesi): ModeSesi {
-    return from_candid_variant_n15(_uploadFile, _downloadFile, value);
+function from_candid_HasilJawaban_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _HasilJawaban): HasilJawaban {
+    return from_candid_record_n25(_uploadFile, _downloadFile, value);
 }
-function from_candid_Puzzle_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Puzzle): Puzzle {
-    return from_candid_record_n5(_uploadFile, _downloadFile, value);
+function from_candid_ModeSesi_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ModeSesi): ModeSesi {
+    return from_candid_variant_n19(_uploadFile, _downloadFile, value);
 }
-function from_candid_Sesi_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Sesi): Sesi {
+function from_candid_Puzzle_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Puzzle): Puzzle {
     return from_candid_record_n10(_uploadFile, _downloadFile, value);
 }
-function from_candid_StatusSesi_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StatusSesi): StatusSesi {
-    return from_candid_variant_n12(_uploadFile, _downloadFile, value);
+function from_candid_Sesi_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Sesi): Sesi {
+    return from_candid_record_n15(_uploadFile, _downloadFile, value);
+}
+function from_candid_StatusSesi_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StatusSesi): StatusSesi {
+    return from_candid_variant_n17(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_SessionId]): SessionId | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_opt_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Sesi]): Sesi | null {
+    return value.length === 0 ? null : from_candid_Sesi_n14(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Timestamp]): Timestamp | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Timestamp]): Timestamp | null {
+function from_candid_opt_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_CityQuestion]): CityQuestion | null {
+function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_CityQuestion]): CityQuestion | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
+function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Puzzle]): Puzzle | null {
-    return value.length === 0 ? null : from_candid_Puzzle_n4(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Sesi]): Sesi | null {
-    return value.length === 0 ? null : from_candid_Sesi_n9(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Puzzle]): Puzzle | null {
+    return value.length === 0 ? null : from_candid_Puzzle_n9(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: _SessionId;
-    status: _StatusSesi;
-    kodeJoin: [] | [string];
-    mode: _ModeSesi;
-    anggota: Array<_UserId>;
-    totalPoin: bigint;
-    waktuMulai: _Timestamp;
-    puzzles: Array<_PuzzleId>;
-    indeksPuzzleAktif: bigint;
-    waktuSelesai: [] | [_Timestamp];
-    jawabanPuzzles: Array<_JawabanPuzzle>;
-}): {
-    id: SessionId;
-    status: StatusSesi;
-    kodeJoin?: string;
-    mode: ModeSesi;
-    anggota: Array<UserId>;
-    totalPoin: bigint;
-    waktuMulai: Timestamp;
-    puzzles: Array<PuzzleId>;
-    indeksPuzzleAktif: bigint;
-    waktuSelesai?: Timestamp;
-    jawabanPuzzles: Array<JawabanPuzzle>;
-} {
-    return {
-        id: value.id,
-        status: from_candid_StatusSesi_n11(_uploadFile, _downloadFile, value.status),
-        kodeJoin: record_opt_to_undefined(from_candid_opt_n13(_uploadFile, _downloadFile, value.kodeJoin)),
-        mode: from_candid_ModeSesi_n14(_uploadFile, _downloadFile, value.mode),
-        anggota: value.anggota,
-        totalPoin: value.totalPoin,
-        waktuMulai: value.waktuMulai,
-        puzzles: value.puzzles,
-        indeksPuzzleAktif: value.indeksPuzzleAktif,
-        waktuSelesai: record_opt_to_undefined(from_candid_opt_n16(_uploadFile, _downloadFile, value.waktuSelesai)),
-        jawabanPuzzles: value.jawabanPuzzles
-    };
-}
-function from_candid_record_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    poinTim: [] | [bigint];
-    poinDiperoleh: bigint;
-    semuaSudahJawab: boolean;
-    benar: boolean;
-    penjelasan: string;
-}): {
-    poinTim?: bigint;
-    poinDiperoleh: bigint;
-    semuaSudahJawab: boolean;
-    benar: boolean;
-    penjelasan: string;
-} {
-    return {
-        poinTim: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.poinTim)),
-        poinDiperoleh: value.poinDiperoleh,
-        semuaSudahJawab: value.semuaSudahJawab,
-        benar: value.benar,
-        penjelasan: value.penjelasan
-    };
-}
-function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: _PuzzleId;
     pertanyaan: string;
     jawabanBenar: bigint;
@@ -536,25 +496,95 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
         poinDasar: value.poinDasar,
         batasWaktu: value.batasWaktu,
         pilihan: value.pilihan,
-        kesulitan: from_candid_Difficulty_n6(_uploadFile, _downloadFile, value.kesulitan),
+        kesulitan: from_candid_Difficulty_n11(_uploadFile, _downloadFile, value.kesulitan),
         penjelasan: value.penjelasan
     };
 }
+function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: _SessionId;
+    status: _StatusSesi;
+    kodeJoin: [] | [string];
+    mode: _ModeSesi;
+    anggota: Array<_UserId>;
+    totalPoin: bigint;
+    waktuMulai: _Timestamp;
+    puzzles: Array<_PuzzleId>;
+    indeksPuzzleAktif: bigint;
+    namaTim: [] | [string];
+    waktuSelesai: [] | [_Timestamp];
+    jawabanPuzzles: Array<_JawabanPuzzle>;
+}): {
+    id: SessionId;
+    status: StatusSesi;
+    kodeJoin?: string;
+    mode: ModeSesi;
+    anggota: Array<UserId>;
+    totalPoin: bigint;
+    waktuMulai: Timestamp;
+    puzzles: Array<PuzzleId>;
+    indeksPuzzleAktif: bigint;
+    namaTim?: string;
+    waktuSelesai?: Timestamp;
+    jawabanPuzzles: Array<JawabanPuzzle>;
+} {
+    return {
+        id: value.id,
+        status: from_candid_StatusSesi_n16(_uploadFile, _downloadFile, value.status),
+        kodeJoin: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.kodeJoin)),
+        mode: from_candid_ModeSesi_n18(_uploadFile, _downloadFile, value.mode),
+        anggota: value.anggota,
+        totalPoin: value.totalPoin,
+        waktuMulai: value.waktuMulai,
+        puzzles: value.puzzles,
+        indeksPuzzleAktif: value.indeksPuzzleAktif,
+        namaTim: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.namaTim)),
+        waktuSelesai: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.waktuSelesai)),
+        jawabanPuzzles: value.jawabanPuzzles
+    };
+}
+function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    poinTim: [] | [bigint];
+    poinDiperoleh: bigint;
+    semuaSudahJawab: boolean;
+    benar: boolean;
+    penjelasan: string;
+}): {
+    poinTim?: bigint;
+    poinDiperoleh: bigint;
+    semuaSudahJawab: boolean;
+    benar: boolean;
+    penjelasan: string;
+} {
+    return {
+        poinTim: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.poinTim)),
+        poinDiperoleh: value.poinDiperoleh,
+        semuaSudahJawab: value.semuaSudahJawab,
+        benar: value.benar,
+        penjelasan: value.penjelasan
+    };
+}
+function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    namaPemain: string;
+    userId: _UserId;
+    totalPoin: bigint;
+    namaTim: [] | [string];
+    jumlahPermainan: bigint;
+}): {
+    namaPemain: string;
+    userId: UserId;
+    totalPoin: bigint;
+    namaTim?: string;
+    jumlahPermainan: bigint;
+} {
+    return {
+        namaPemain: value.namaPemain,
+        userId: value.userId,
+        totalPoin: value.totalPoin,
+        namaTim: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.namaTim)),
+        jumlahPermainan: value.jumlahPermainan
+    };
+}
 function from_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    aktif: null;
-} | {
-    selesai: null;
-}): StatusSesi {
-    return "aktif" in value ? StatusSesi.aktif : "selesai" in value ? StatusSesi.selesai : value;
-}
-function from_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    tim: null;
-} | {
-    solo: null;
-}): ModeSesi {
-    return "tim" in value ? ModeSesi.tim : "solo" in value ? ModeSesi.solo : value;
-}
-function from_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     mudah: null;
 } | {
     sedang: null;
@@ -563,13 +593,33 @@ function from_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): Difficulty {
     return "mudah" in value ? Difficulty.mudah : "sedang" in value ? Difficulty.sedang : "sulit" in value ? Difficulty.sulit : value;
 }
-function from_candid_vec_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Puzzle>): Array<Puzzle> {
-    return value.map((x)=>from_candid_Puzzle_n4(_uploadFile, _downloadFile, x));
+function from_candid_variant_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    aktif: null;
+} | {
+    selesai: null;
+}): StatusSesi {
+    return "aktif" in value ? StatusSesi.aktif : "selesai" in value ? StatusSesi.selesai : value;
 }
-function to_candid_Difficulty_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Difficulty): _Difficulty {
-    return to_candid_variant_n18(_uploadFile, _downloadFile, value);
+function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    tim: null;
+} | {
+    solo: null;
+}): ModeSesi {
+    return "tim" in value ? ModeSesi.tim : "solo" in value ? ModeSesi.solo : value;
 }
-function to_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Difficulty): {
+function from_candid_vec_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Puzzle>): Array<Puzzle> {
+    return value.map((x)=>from_candid_Puzzle_n9(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_EntriLeaderboard>): Array<EntriLeaderboard> {
+    return value.map((x)=>from_candid_EntriLeaderboard_n5(_uploadFile, _downloadFile, x));
+}
+function to_candid_Difficulty_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Difficulty): _Difficulty {
+    return to_candid_variant_n22(_uploadFile, _downloadFile, value);
+}
+function to_candid_opt_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_variant_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Difficulty): {
     mudah: null;
 } | {
     sedang: null;

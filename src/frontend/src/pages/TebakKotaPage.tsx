@@ -1,6 +1,12 @@
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { type CityQuestionLocal, useCityQuestions } from "@/lib/actor";
+import { useGameContext } from "@/context/GameContext";
+import { useActor } from "@/lib/actor";
+import {
+  type CityQuestionLocal,
+  useCityQuestions,
+  useInvalidateLeaderboard,
+} from "@/lib/actor";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   CheckCircle,
@@ -201,7 +207,8 @@ function RingkasanModal({
                 : "Terus Berlatih!"}
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Tebak Kota selesai — {benar}/{total} kota berhasil ditebak
+            Tebak Kota selesai — {benar}/{total} kota berhasil ditebak. Skormu
+            sudah dicatat!
           </p>
         </div>
 
@@ -298,6 +305,9 @@ export function TebakKotaPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/tebak-kota" });
   const { data: questions, isLoading } = useCityQuestions();
+  const { daftarkanKeLeaderboard } = useGameContext();
+  const { actor } = useActor();
+  const invalidateLeaderboard = useInvalidateLeaderboard();
 
   const [soalIndex, setSoalIndex] = useState(0);
   const [skorTotal, setSkorTotal] = useState(0);
@@ -309,11 +319,49 @@ export function TebakKotaPage() {
   const [popupPoin, setPopupPoin] = useState(0);
   const [selesai, setSelesai] = useState(false);
   const [shakeSalah, setShakeSalah] = useState(false);
+  const [backendSessionId, setBackendSessionId] = useState<bigint | null>(null);
+  const [terdaftar, setTerdaftar] = useState(false);
   const waktuMulaiRef = useRef<number>(Date.now());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const waktuRef = useRef(30);
 
   const currentQ: CityQuestionLocal | undefined = questions?.[soalIndex];
+
+  const searchParams = search as Record<string, string>;
+  const modeLabel =
+    searchParams.mode === "tim"
+      ? `Tim: ${searchParams.namaTim ?? "Tim Saya"}`
+      : "Mode Solo";
+  const isTimMode = searchParams.mode === "tim";
+  const namaTim = isTimMode ? (searchParams.namaTim ?? undefined) : undefined;
+
+  // Create backend session on mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once on mount
+  useEffect(() => {
+    if (!actor) return;
+    const createSession = async () => {
+      try {
+        if (isTimMode) {
+          // If joining from code, the sessionId may already be in search params
+          const existingId = searchParams.sessionId
+            ? BigInt(searchParams.sessionId)
+            : null;
+          if (existingId) {
+            setBackendSessionId(existingId);
+          } else {
+            const [sid] = await actor.buatSesiTim();
+            setBackendSessionId(sid);
+          }
+        } else {
+          const sid = await actor.buatSesiSolo();
+          setBackendSessionId(sid);
+        }
+      } catch {
+        // Ignore — session is best-effort
+      }
+    };
+    createSession();
+  }, [actor]);
 
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -353,6 +401,35 @@ export function TebakKotaPage() {
   useEffect(() => {
     return () => stopTimer();
   }, [stopTimer]);
+
+  // Register on leaderboard when game ends
+  useEffect(() => {
+    if (selesai && !terdaftar) {
+      setTerdaftar(true);
+      if (backendSessionId) {
+        daftarkanKeLeaderboard(backendSessionId, namaTim).then(() => {
+          invalidateLeaderboard();
+        });
+      } else if (actor) {
+        // No backend session — create a solo session now just to register
+        actor
+          .buatSesiSolo()
+          .then((sid) => daftarkanKeLeaderboard(sid, namaTim))
+          .then(() => invalidateLeaderboard())
+          .catch(() => {
+            /* ignore */
+          });
+      }
+    }
+  }, [
+    selesai,
+    terdaftar,
+    backendSessionId,
+    namaTim,
+    daftarkanKeLeaderboard,
+    invalidateLeaderboard,
+    actor,
+  ]);
 
   const handlePilih = (kota: string) => {
     if (sudahDijawab || !currentQ) return;
@@ -398,13 +475,21 @@ export function TebakKotaPage() {
     setJawaban(null);
     setSudahDijawab(false);
     setSelesai(false);
+    setTerdaftar(false);
+    setBackendSessionId(null);
     waktuMulaiRef.current = Date.now();
+    // Re-create backend session
+    if (actor) {
+      (isTimMode
+        ? actor.buatSesiTim().then(([sid]) => sid)
+        : actor.buatSesiSolo()
+      )
+        .then((sid) => setBackendSessionId(sid))
+        .catch(() => {
+          /* ignore */
+        });
+    }
   };
-
-  const modeLabel =
-    (search as Record<string, string>).mode === "tim"
-      ? `Tim: ${(search as Record<string, string>).namaTim ?? "Tim Saya"}`
-      : "Mode Solo";
 
   const persen = currentQ ? (waktuTersisa / currentQ.batasWaktu) * 100 : 100;
   const kritis = waktuTersisa <= (currentQ?.batasWaktu ?? 30) * 0.4;

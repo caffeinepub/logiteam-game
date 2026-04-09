@@ -11,7 +11,10 @@ import ScoreApi "mixins/score-api";
 import CityApi "mixins/city-api";
 import Map "mo:core/Map";
 import List "mo:core/List";
+import Principal "mo:core/Principal";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   // Puzzle data store
   let puzzles = List.empty<PuzzleTypes.Puzzle>();
@@ -26,6 +29,8 @@ actor {
   // Score and history state
   let riwayat = Map.empty<Common.UserId, List.List<ScoreTypes.RiwayatSesi>>();
   let leaderboard = List.empty<ScoreTypes.EntriLeaderboard>();
+  // Player display name store (userId → display name)
+  let namaPemainStore = Map.empty<Common.UserId, Text>();
 
   // Seed puzzles on first initialization (idempotent — only seeds when empty)
   if (puzzles.size() == 0) {
@@ -39,6 +44,6 @@ actor {
 
   include PuzzleApi(puzzles);
   include SessionApi(sessions, codeIndex, puzzles);
-  include ScoreApi(sessions, puzzles, riwayat, leaderboard);
+  include ScoreApi(sessions, puzzles, riwayat, leaderboard, namaPemainStore);
   include CityApi(cityStore);
 };
